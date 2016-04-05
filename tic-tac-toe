@@ -1,40 +1,53 @@
 import Html exposing (table, tr, td, text, div)
-import List exposing (take, map, drop, concat, isEmpty, foldr, append, all, any)
+import List exposing (take, map, drop, concat, isEmpty, foldr, append, all, any, repeat)
 import Graphics.Element exposing (show)
 
 
-type Position = X | O | Nothing
+-- MODEL
+
+type Symbol = X | O | Nothing
+
+type alias Model = {
+  currentPlayer: Symbol,
+  board: List Symbol
+}
+
+initial = Model X (repeat 9 Nothing)
 
 board = [X, O, Nothing, X, X, X, Nothing, O, O]
 
 
-rows board = 
-  [take 3 board, take 3 (drop 3 board), drop 6 board]
-  
-columns board =
-  transpose (rows board)
-  
-diagonals board =
-  case board of
-    [d1, _, d2, _, d3, _, d4, _, d5] ->
-      [[d1, d3, d5], [d2, d3, d4]]
-    _ -> []
+-- UPDATE
 
-allLines board =
-  foldr append [] [rows board, columns board, diagonals board]
-  
-winningLine line x =
-  all (\position -> position == x) line
-  
-won board x =
-  any (\line -> winningLine line x) (allLines board)
+update action model =
+  Model (nextPlayer model.currentPlayer) (putSymbol model.board model.currentPlayer action)
+
+putSymbol board symbol position =
+  ((take (position - 1) board) ++ (symbol :: (drop (position) board)))
+
+
+nextPlayer x =
+  case x of
+    X -> O
+    O -> X
+    _ -> Nothing
+
+-- VIEW
 
 main = div []
   [ drawBoard board
-  , text (won board X)
-  , text (won board O)
+  , text (statusText board)
   ]
-    
+  
+statusText board =
+  if won board X then
+    "X won"
+  else if won board O then
+    "O won"
+  else
+    "Ble is playing"
+
+
 drawBoard board =
   table [] (map (\row -> tr [] (map drawCell row)) (rows board))
 
@@ -46,8 +59,36 @@ positionString x =
     X -> "X"
     O -> "O"
     Nothing -> " "
+    
+
+-- HELPERS
 
 
+rows board = 
+  [take 3 board, take 3 (drop 3 board), drop 6 board]
+  
+columns board =
+  transpose (rows board)
+
+diagonals board =
+  case board of
+    [d1, _, d2, _, d3, _, d4, _, d5] ->
+      [[d1, d3, d5], [d2, d3, d4]]
+    _ -> []
+
+-- get a list of all lines needed to determine the winner (rows, columns, diagonals)
+allLines board =
+  (rows board) ++ (columns board) ++ (diagonals board)
+
+-- determine whether a line is filled by player x
+winningLine line x =
+  all (\position -> position == x) line
+
+-- determine whether board was won by player x
+won board x =
+  any (\line -> winningLine line x) (allLines board)
+
+-- transpose a list of lists
 transpose list =
   case list of
     []::_ ->
