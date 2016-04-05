@@ -1,0 +1,35 @@
+import Html exposing (table, tr, td, text)
+import List exposing (take, map, drop)
+
+type Position = X | O | Nothing
+
+board = [X, O, Nothing, X, X, X, Nothing, O, O]
+
+
+rows board = 
+  [take 3 board, take 3 drop 3 board, drop 6 board]
+
+columns board = 
+  
+
+won x board = 
+  
+
+main = drawBoard board
+    
+drawBoard board =
+  table []
+    [ tr [] (map drawCell (take 3 board))
+    , tr [] (map drawCell (take 3 (drop 3 board)))
+    , tr [] (map drawCell (drop 6 board))
+    ]
+
+drawCell x =
+  td [] [text (positionString x)]
+  
+positionString x =
+  case x of
+    X -> "X"
+    O -> "O"
+    Nothing -> " "
+
