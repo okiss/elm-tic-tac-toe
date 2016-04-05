@@ -1,5 +1,7 @@
-import Html exposing (table, tr, td, text)
-import List exposing (take, map, drop)
+import Html exposing (table, tr, td, text, div)
+import List exposing (take, map, drop, concat, isEmpty, foldr, append, all, any)
+import Graphics.Element exposing (show)
+
 
 type Position = X | O | Nothing
 
@@ -7,22 +9,34 @@ board = [X, O, Nothing, X, X, X, Nothing, O, O]
 
 
 rows board = 
-  [take 3 board, take 3 drop 3 board, drop 6 board]
-
-columns board = 
+  [take 3 board, take 3 (drop 3 board), drop 6 board]
   
-
-won x board = 
+columns board =
+  transpose (rows board)
   
+diagonals board =
+  case board of
+    [d1, _, d2, _, d3, _, d4, _, d5] ->
+      [[d1, d3, d5], [d2, d3, d4]]
+    _ -> []
 
-main = drawBoard board
+allLines board =
+  foldr append [] [rows board, columns board, diagonals board]
+  
+winningLine line x =
+  all (\position -> position == x) line
+  
+won board x =
+  any (\line -> winningLine line x) (allLines board)
+
+main = div []
+  [ drawBoard board
+  , text (won board X)
+  , text (won board O)
+  ]
     
 drawBoard board =
-  table []
-    [ tr [] (map drawCell (take 3 board))
-    , tr [] (map drawCell (take 3 (drop 3 board)))
-    , tr [] (map drawCell (drop 6 board))
-    ]
+  table [] (map (\row -> tr [] (map drawCell row)) (rows board))
 
 drawCell x =
   td [] [text (positionString x)]
@@ -33,3 +47,14 @@ positionString x =
     O -> "O"
     Nothing -> " "
 
+
+transpose list =
+  case list of
+    []::_ ->
+      []
+    list ->
+      let
+        heads = map (take 1) list |> concat
+        tails = map (drop 1) list 
+      in
+        heads::(transpose tails)
