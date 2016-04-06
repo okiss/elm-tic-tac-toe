@@ -1,6 +1,7 @@
 import Html exposing (table, tr, td, text, div, button)
+import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
-import List exposing (take, map, drop, concat, isEmpty, foldr, append, all, any, repeat, indexedMap)
+import List exposing (take, map, drop, concat, isEmpty, foldr, append, all, any, repeat, indexedMap, head)
 import Signal exposing (Address)
 import StartApp.Simple as StartApp
 import String
@@ -33,7 +34,10 @@ update action model =
       initial
 
 putSymbol board symbol position =
-  ((take (position - 1) board) ++ (symbol :: (drop (position) board)))
+  if head (drop (position - 1) board) == Just Nothing then
+    ((take (position - 1) board) ++ (symbol :: (drop (position) board)))
+  else
+    board
 
 
 nextPlayer x =
@@ -72,7 +76,10 @@ drawBoard address board =
     )
 
 drawCell address (index, symbol) =
-  td [] [button [onClick address (Play (index + 1)) ] [text (symbolToString symbol)]]
+  if (symbol == Nothing) then
+    td [] [button [onClick address (Play (index + 1)) ] [text (symbolToString symbol)]]
+  else
+    td [] [button [] [text (symbolToString symbol)]]
   
 symbolToString x =
   case x of
@@ -117,7 +124,7 @@ won board x =
 isBoardFull board =
   all (\position -> position /= Nothing) board
 
-isFinished board =
+isBoardFinished board =
   won board X || won board O || isBoardFull board
 
 -- transpose a list of lists
